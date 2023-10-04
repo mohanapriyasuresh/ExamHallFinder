@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exam Hall Finder</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-image: url('bg.jpg');
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            background-size: 100% 100%;
+        }
+
+        #top-image {
+            width: 250px; /* Adjust the width as needed */
+            margin-top: 20px; /* Add margin to push the image to the top */
+        }
+
+        #nameInput {
+            margin-bottom: 10px;
+            text-align: center;
+            display: block;
+            padding: 10px; /* Add padding to input */
+            border: 2px solid #FFA500; /* Orange border */
+            border-radius: 5px; /* Rounded corners */
+            width: 200px; /* Set the width */
+        }
+
+        button {
+            text-align: center;
+            display: block;
+            background-color: #FFA500; /* Orange background color */
+            color: white; /* Text color */
+            padding: 10px 20px; /* Add padding to the button */
+            border: none; /* Remove border */
+            border-radius: 5px; /* Rounded corners */
+            cursor: pointer; /* Add pointer cursor on hover */
+        }
+
+        #phoneNumberResult {
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        #bottom-text1 {
+            margin-top: auto; /* Push the text to the bottom */
+            text-align: left; /* Align text to the left */
+            margin-left: 10px; /* Add left margin for better readability */
+        }
+        #bottom-text2 {
+            margin-left: 10px; /* Add left margin for better readability */
+        }
+    </style>
+</head>
+<body>
+    <br><br>
+    <img id="top-image" src="image.png" alt="Your Image">
+    <br><br><br><br><br><br>
+    <input type="text" id="nameInput" placeholder="Enter Register Number" onkeydown="if(event.key === 'Enter') lookupPhoneNumber()">
+    <button onclick="lookupPhoneNumber()">SHOW EXAM HALL NUMBER</button>
+    <p id="phoneNumberResult"></p>
+    <p id="bottom-text1"><b>This application is helpful for students to check their exam hall allotment.</b></p>
+    <p id="bottom-text2"><b>The application is developed by faculty members and G.ARAVIND (2021-2024) Department of BCA</b></p>
+    <script src="xlsx.full.min.js"></script>
+    <script>
+        let phoneBook = {};
+
+        // Load the Excel file (replace 'phone_numbers.xlsx' with the actual file path)
+        fetch('exam_halls.xlsx')
+            .then(response => response.arrayBuffer())
+            .then(data => {
+                const workbook = XLSX.read(data, { type: 'array' });
+                const sheetName = 'Sheet1'; // Assuming the sheet name is 'Sheet1'
+                const worksheet = workbook.Sheets[sheetName];
+                const range = XLSX.utils.decode_range(worksheet['!ref']);
+
+                // Extract data from Excel and store it in the phoneBook object
+                for (let rowNum = range.s.r + 1; rowNum <= range.e.r; rowNum++) {
+                    const RegisterNumber = worksheet[XLSX.utils.encode_cell({ r: rowNum, c: 0 })];
+                    const examHallNumber = worksheet[XLSX.utils.encode_cell({ r: rowNum, c: 1 })];
+                    
+                    if (RegisterNumber && examHallNumber) {
+                        // Convert the exam number to lowercase and store it in the phoneBook object
+                        phoneBook[RegisterNumber.v.toLowerCase()] = examHallNumber.v;
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error loading Excel file:', error);
+            });
+
+        function lookupPhoneNumber() {
+            const RegisterNumberInput = document.getElementById('nameInput').value.toLowerCase(); // Convert input to lowercase
+            const phoneNumberResult = document.getElementById('phoneNumberResult');
+
+            // Check if the lowercase exam number exists in the phoneBook object (case-insensitive)
+            if (phoneBook.hasOwnProperty(RegisterNumberInput)) {
+                phoneNumberResult.textContent = `Exam Hall Number: ${phoneBook[RegisterNumberInput]}`;
+            } else {
+                phoneNumberResult.textContent = 'Exam Number Not Found';
+            }
+        }
+    </script>
+</body>
+</html>
